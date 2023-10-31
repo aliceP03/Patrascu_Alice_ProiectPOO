@@ -432,7 +432,7 @@ void main() {
 	salarii[1] =  6650;
 	DepartamentMedical dm3("Pediatrie", 2, angajati, salarii);
 	dm3.afisare();
-	adaugareAngajat(dm3, "Palade", 3500); //apelare functie friend 
+	adaugareAngajat(dm3, "Palade", 3500); //apelare functie friend cu clasa departament medical
 	dm3.afisare();
 
 
@@ -472,7 +472,7 @@ void main() {
 
 	EchipamentMedical em4(em3); //copiere prin constructorul de copiere
 	EchipamentMedical em5;
-	em5 = em3; //copiere prin constructorul =
+	em5 = em3; //copiere prin operatorul =
 	cout << "Echipamentul cu numarul de inregistrare " << em4.getNrEchipament() + 1 << " este un " << em4.getNume() << " cu durata medie de functionare de "
 		<< em4.getDurataMedieFunctionare() << " ani si " <<( em4.getEstePortabil() ? "este portabil." : "nu este portabil.");
 	cout << endl;
