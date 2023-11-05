@@ -6,9 +6,10 @@ private:
 	const int nrPacient;
 	static int nrGenerator;
 	char* nume;
-	int varsta; 
+	int varsta;
 	bool areAsigurare;
 public:
+
 	Pacient(): nrPacient(nrGenerator++) {
 		this->nume = new char[strlen("Popescu Ion") + 1]; //alocare memorie
 		strcpy_s(this->nume, strlen("Popescu Ion") + 1, "Popescu Ion"); 
@@ -98,7 +99,64 @@ public:
 			delete this->nume;
 		}
 	}
+
+	Pacient operator++() {
+		this->varsta++;
+		return *this;
+	}
+
+	Pacient operator++(int) {
+		Pacient copie = *this;
+		this->varsta++;
+		return copie;
+	}
+
+	bool operator>(Pacient p) {
+		if (this->varsta != p.varsta)
+			return this->varsta > p.varsta;
+	}
+
+	bool operator==(Pacient p) {
+		if (this->varsta > 0 && p.varsta > 0)
+			return this->varsta == p.varsta;
+	}
+
 	friend Pacient modificareAsigurare(Pacient& p); 
+
+	friend ostream &operator<<(ostream& output_p, Pacient p){
+		output_p << "Pacientul cu numarul " << p.nrPacient+1  << " se numeste " << p.nume << ", are varsta de " << p.varsta << " ani si costurile de spitalizare ";
+		if (p.areAsigurare==NULL) 
+			output_p << "N/A.";
+		else{
+			if(p.areAsigurare)
+				output_p << "sunt acoperite de asigurarea medicala.";
+			else
+				output_p << "nu sunt acoperite de asiguararea medicala.";
+		}	
+		output_p << endl;
+		return output_p;
+	}
+
+	friend istream& operator>>(istream& input_p, Pacient& p) {
+		cout << "Introduceti datele pacientului. Numele: ";
+		input_p >> p.nume;
+		cout << "Varsta: ";
+		input_p >> p.varsta;
+		cout << "Are asigurare? Introduceti 'D' pentru DA si 'N' pentru NU."<< endl;
+		char var=0;
+		input_p >> var;
+		if (var == 'D' || var == 'N') {
+			if (var == 'D')
+				p.areAsigurare = true;
+			else
+				if (var == 'N')
+					p.areAsigurare = false;
+		}
+		else
+			p.areAsigurare = NULL;
+		return input_p;
+	}
+
 };
 
 int Pacient::nrGenerator = 0;
@@ -241,6 +299,67 @@ public:
 		}
 	}
 	
+	float operator() () {
+		float suma = 0;
+		for (int i = 0; i < nrAngajati; i++) {
+			suma += salarii[i];
+		}
+		return suma;
+	}
+
+	string &operator[](int index) {
+		if (index >= 0 && index < this->nrAngajati)
+			return numeAngajati[index];
+	}
+
+	DepartamentMedical operator+=(const DepartamentMedical& dm) {
+		int aux = this->nrAngajati + dm.nrAngajati;
+		string* aux1 = new string[aux];
+		float* aux2 = new float[aux];
+
+		for (int i = 0; i < this->nrAngajati; i++) {
+			aux1[i] = this-> numeAngajati[i];
+			aux2[i] = this->salarii[i];
+		}
+		for (int i = this->nrAngajati; i < aux; i++) {
+			aux1[i] = dm.numeAngajati[i - this->nrAngajati];
+			aux2[i] = dm.salarii[i - this->nrAngajati];
+		}
+
+		this->nrAngajati = aux;
+		if (this->numeAngajati)
+			delete[]numeAngajati;
+		if (this->salarii)
+			delete[]salarii;
+		this->numeAngajati = aux1;
+		this->salarii = aux2;
+
+		return *this;
+	}
+
+	friend ostream& operator<<(ostream& output_dm, DepartamentMedical dm) {
+		output_dm << "Departamentul de " << dm.nume << " are un numar de " << dm.nrAngajati << " angajati cu salariile urmatoare: " << endl;
+		for (int i = 0; i < dm.nrAngajati; i++) {
+			output_dm << "       " << i + 1 << ". " << dm.numeAngajati[i] << " are salariul de " << dm.salarii[i] << " lei." << endl;
+		}
+		output_dm << endl;
+		return output_dm;
+	}
+
+	friend istream& operator>>(istream& input_dm, DepartamentMedical& dm) {
+		cout << "Numar angajati: ";
+		input_dm >> dm.nrAngajati;
+		cout << " Introduceti numele angajatilor:";
+		for (int i = 0; i < dm.nrAngajati; i++)
+			input_dm >>dm. numeAngajati[i];
+		for (int i = 0; i < dm.nrAngajati; i++) {
+			cout << "Angajatul cu numele " << dm.numeAngajati[i] << " are salariul de (lei): ";
+			input_dm >> dm.salarii[i];
+		}
+		return input_dm;
+	}
+
+
 	friend void adaugareAngajat( DepartamentMedical& dm, string nume, float salariu);
 };
 
@@ -367,6 +486,64 @@ public:
 			delete this->nume;
 		}
 	}
+
+	EchipamentMedical operator!() {
+		if (this->estePortabil != NULL)
+			this->estePortabil = !this->estePortabil;
+		else
+			this->estePortabil = NULL;
+		return *this;
+	}
+
+	EchipamentMedical operator--() {
+		this->durataMedieFunctionare--;
+		return *this;
+	}
+
+	EchipamentMedical operator--(int) {
+		EchipamentMedical copie = *this;
+		this->durataMedieFunctionare--;
+		return copie;
+	}
+
+	bool operator!=(EchipamentMedical em) {
+		return this->durataMedieFunctionare != em.durataMedieFunctionare;
+	}
+
+	friend ostream& operator<<(ostream& output_em, EchipamentMedical em) {
+		output_em << "Echipamentul cu numarul de inregistrare " <<em. nrEchipament + 1 << " este un " << em.nume << " cu durata medie de functionare de "
+			<< em.durataMedieFunctionare << " ani si ";
+		if (em.estePortabil==NULL)
+			output_em << "N/A.";
+		else{
+			if(em.estePortabil)
+				output_em << "este portabil.";
+			else
+				output_em << "nu este portabil.";
+		}
+		output_em << endl;
+		return output_em;
+	}
+
+	friend istream& operator>>(istream& input_em, EchipamentMedical& em) {
+		cout << "Introduceti datele echipamentului. Numele: ";
+		input_em >> em.nume;
+		cout << "Durata medie de functionare: ";
+		input_em >> em.durataMedieFunctionare;
+		cout << "Este portabil? Introduceti 'D' pentru DA si 'N' pentru NU." << endl;
+		char var = 0;
+		input_em >> var;
+		if (var == 'D' || var == 'N') {
+			if (var == 'D')
+				em.estePortabil = true;
+			else
+				em.estePortabil = false;
+		}
+		else
+			em.estePortabil = NULL;
+		return input_em;
+	}
+
 };
 int EchipamentMedical::nrGeneratorEchipament = 0; 
 
@@ -391,6 +568,8 @@ void main() {
 
 	cout<< "Numarul de pacienti consultati pana in acest moment este de "<< Pacient::getNrGenerator()<<"." << endl;
 
+
+
 	Pacient pacient4(pacient2);//copiere prin constructorul de copiere 
 	cout<<"Pacientul cu numarul " << pacient4.getNrPacient()+1 <<" are numele de "<< pacient4.getNume() << " , varsta de "<< pacient4.getVarsta() 
 		<<" (de) ani  si costurile " 
@@ -408,6 +587,17 @@ void main() {
 	pacient5 = pacient2;//copiere prin operatorul =
 	pacient5.AfisarePacient(); 
 
+
+	Pacient pacient6;
+	cin >> pacient6;
+	cout << pacient6;
+	pacient6++;
+	++pacient6;
+	cout << pacient6;
+	Pacient pacient7;
+	cin >> pacient7;
+	cout <<(pacient6 > pacient7 ? "Primul pacient este mai in varsta. " : "Al doilea pacient este mai in varsta.")<<endl;
+	cout << (pacient7 == pacient6 ? "Pacientii au aceeasi varsta." : "Pacientii nu au aceeasi varsta.")<<endl;
 
 	//clasa 2
 	DepartamentMedical dm1;
@@ -436,6 +626,7 @@ void main() {
 	dm3.afisare();
 
 
+
 	DepartamentMedical dm4(dm1);
 	DepartamentMedical dm5;
 	cout << "Departamentul de " << dm4.getNume() << " are un numar de " << dm4.getNrAngajati() << " angajati cu salariile urmatoare: " << endl;
@@ -457,6 +648,14 @@ void main() {
 	cout << endl;
 
 
+
+	cout << "Bugetul pentru salarii in sectia de " << dm3.getNume() << " este de " << dm3()<< " lei."<<endl;
+	cout<<dm3;
+	cin >> dm3;
+	dm3[0] = "Amariei";
+	cout << "Noul angajat al departamentului "<< dm3.getNume()<< " este "<<dm3[0]<<"." << endl;
+	dm3 += dm2;
+	cout << dm3;
 	
 	//clasa 3
 	EchipamentMedical em1;
@@ -469,6 +668,8 @@ void main() {
 	strcpy_s(em, strlen("Aparat de Radiografie") + 1, "Aparat de Radiografie");
 	EchipamentMedical em3(em, 10, false);
 	em3.afisareEchipament();
+
+
 
 	EchipamentMedical em4(em3); //copiere prin constructorul de copiere
 	EchipamentMedical em5;
@@ -487,6 +688,15 @@ void main() {
 	em5.afisareEchipament();
 	cout << endl;
 	cout << "Numarul total de echipamente existente in spital este de " << EchipamentMedical::getNumarTotal() << "." << endl;
+	
+
+	cin >> em5;
+	em5--;
+	cout << em5;
+	!em5;
+	cout << em5;
+	cout << (em5 != em4 ? "Au durata medie de functionare diferite." : "Au aceeasi durata medie de functionare.")<<endl;
+
 	delete[]salarii; delete[]salarii2; delete[] angajati; delete[] angajati2;
 
 }
