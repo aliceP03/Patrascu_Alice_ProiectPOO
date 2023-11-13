@@ -41,6 +41,8 @@ public:
 	Pacient operator=(const Pacient& p) {
 		if (this != &p)
 		{
+			if (this->nume)
+				delete[] this->nume;
 			this->nume = new char[strlen(p.nume)+1];
 			strcpy_s(this->nume, strlen(p.nume)+1, p.nume);
 			this->varsta = p.varsta;
@@ -125,35 +127,32 @@ public:
 
 	friend ostream &operator<<(ostream& output_p, Pacient p){
 		output_p << "Pacientul cu numarul " << p.nrPacient+1  << " se numeste " << p.nume << ", are varsta de " << p.varsta << " ani si costurile de spitalizare ";
-		if (p.areAsigurare==NULL) 
-			output_p << "N/A.";
-		else{
-			if(p.areAsigurare)
-				output_p << "sunt acoperite de asigurarea medicala.";
-			else
-				output_p << "nu sunt acoperite de asiguararea medicala.";
-		}	
+		if(p.areAsigurare)
+			output_p << "sunt acoperite de asigurarea medicala.";
+		else
+			output_p << "nu sunt acoperite de asiguararea medicala.";
 		output_p << endl;
 		return output_p;
 	}
 
 	friend istream& operator>>(istream& input_p, Pacient& p) {
 		cout << "Introduceti datele pacientului. Numele: ";
-		input_p >> p.nume;
+		if (p.nume) {
+			delete[]p.nume;
+		}
+		char aux[40];
+		input_p >> aux;
+		p.nume = new char[strlen(aux) + 1];
+		strcpy_s(p.nume, strlen(aux )+1, aux);
 		cout << "Varsta: ";
 		input_p >> p.varsta;
 		cout << "Are asigurare? Introduceti 'D' pentru DA si 'N' pentru NU."<< endl;
 		char var=0;
 		input_p >> var;
-		if (var == 'D' || var == 'N') {
-			if (var == 'D')
-				p.areAsigurare = true;
-			else
-				if (var == 'N')
-					p.areAsigurare = false;
-		}
+		if (var == 'D')
+			p.areAsigurare = true;
 		else
-			p.areAsigurare = NULL;
+			p.areAsigurare = false;
 		return input_p;
 	}
 
@@ -228,6 +227,8 @@ public:
 	DepartamentMedical operator =(const DepartamentMedical& dm) {
 		if (this != &dm) {
 			this->nrAngajati = dm.nrAngajati;
+			if (this->numeAngajati)
+				delete[] this->numeAngajati;
 			this->numeAngajati = new string[nrAngajati];
 			for (int i = 0; i < nrAngajati; i++) {
 				this->numeAngajati[i] = dm.numeAngajati[i];
@@ -310,7 +311,7 @@ public:
 	string &operator[](int index) {
 		if (index >= 0 && index < this->nrAngajati)
 			return numeAngajati[index];
-	}
+ 	}
 
 	DepartamentMedical operator+=(const DepartamentMedical& dm) {
 		int aux = this->nrAngajati + dm.nrAngajati;
@@ -349,16 +350,26 @@ public:
 	friend istream& operator>>(istream& input_dm, DepartamentMedical& dm) {
 		cout << "Numar angajati: ";
 		input_dm >> dm.nrAngajati;
+		if (dm.numeAngajati) {
+			delete[]dm.numeAngajati;
+		}
+		if (dm.salarii) {
+			delete[]dm.salarii;
+		}
+		dm.numeAngajati = new string[dm.nrAngajati];
+		dm.salarii = new float[dm.nrAngajati];
 		cout << " Introduceti numele angajatilor:";
-		for (int i = 0; i < dm.nrAngajati; i++)
+		for (int i = 0; i < dm.nrAngajati; i++){
 			input_dm >>dm. numeAngajati[i];
-		for (int i = 0; i < dm.nrAngajati; i++) {
 			cout << "Angajatul cu numele " << dm.numeAngajati[i] << " are salariul de (lei): ";
 			input_dm >> dm.salarii[i];
 		}
 		return input_dm;
 	}
 
+	explicit operator int() {
+		return this->nrAngajati;
+	}
 
 	friend void adaugareAngajat( DepartamentMedical& dm, string nume, float salariu);
 };
@@ -396,6 +407,7 @@ class EchipamentMedical {
 	bool estePortabil;
 
 public:
+	
 	EchipamentMedical():nrEchipament(nrGeneratorEchipament) {
 		nrGeneratorEchipament++;
 		this->nume = new char[strlen("Defibrilator") + 1];
@@ -426,6 +438,8 @@ public:
 
 	EchipamentMedical operator=(const EchipamentMedical &ec) {
 		if (this != &ec) {
+			if (this->nume)
+				delete[] this->nume;
 			this->nume = new char[strlen(ec.nume)+1];
 			strcpy_s(this->nume, strlen(ec.nume)+1, ec.nume);
 			this->durataMedieFunctionare = ec.durataMedieFunctionare;
@@ -481,6 +495,11 @@ public:
 		this->estePortabil = portabil;
 	}
 
+
+	operator int() {
+		return this->durataMedieFunctionare;
+	}
+
 	~EchipamentMedical() {
 		if (nume) {
 			delete this->nume;
@@ -488,11 +507,9 @@ public:
 	}
 
 	EchipamentMedical operator!() {
-		if (this->estePortabil != NULL)
-			this->estePortabil = !this->estePortabil;
-		else
-			this->estePortabil = NULL;
-		return *this;
+		EchipamentMedical copie = *this;
+		copie.estePortabil = !this->estePortabil;
+		return copie;
 	}
 
 	EchipamentMedical operator--() {
@@ -513,34 +530,31 @@ public:
 	friend ostream& operator<<(ostream& output_em, EchipamentMedical em) {
 		output_em << "Echipamentul cu numarul de inregistrare " <<em. nrEchipament + 1 << " este un " << em.nume << " cu durata medie de functionare de "
 			<< em.durataMedieFunctionare << " ani si ";
-		if (em.estePortabil==NULL)
-			output_em << "N/A.";
-		else{
 			if(em.estePortabil)
 				output_em << "este portabil.";
 			else
 				output_em << "nu este portabil.";
-		}
-		output_em << endl;
 		return output_em;
 	}
 
 	friend istream& operator>>(istream& input_em, EchipamentMedical& em) {
 		cout << "Introduceti datele echipamentului. Numele: ";
-		input_em >> em.nume;
+		if (em.nume) {
+			delete[] em.nume;
+		}
+		char aux[50];
+		input_em >> aux;;
+		em.nume = new char[strlen(aux) + 1];
+		strcpy_s(em.nume, strlen(aux) + 1, aux);
 		cout << "Durata medie de functionare: ";
 		input_em >> em.durataMedieFunctionare;
 		cout << "Este portabil? Introduceti 'D' pentru DA si 'N' pentru NU." << endl;
 		char var = 0;
 		input_em >> var;
-		if (var == 'D' || var == 'N') {
-			if (var == 'D')
-				em.estePortabil = true;
-			else
-				em.estePortabil = false;
-		}
+		if (var == 'D')
+			em.estePortabil = true;
 		else
-			em.estePortabil = NULL;
+			em.estePortabil = false;
 		return input_em;
 	}
 
@@ -599,6 +613,19 @@ void main() {
 	cout <<(pacient6 > pacient7 ? "Primul pacient este mai in varsta. " : "Al doilea pacient este mai in varsta.")<<endl;
 	cout << (pacient7 == pacient6 ? "Pacientii au aceeasi varsta." : "Pacientii nu au aceeasi varsta.")<<endl;
 
+	int Nr=0;
+	cout << "Introduceti numarul pacientilor: ";
+	cin >> Nr;
+	Pacient* pacienti;
+	pacienti = new Pacient[Nr];
+	for (int i = 0; i < Nr; i++) {
+		cin >> pacienti[i];
+	}
+	for(int i=0; i<Nr; i++)
+		cout << pacienti[i];
+
+
+
 	//clasa 2
 	DepartamentMedical dm1;
 	dm1.afisare();
@@ -656,6 +683,18 @@ void main() {
 	cout << "Noul angajat al departamentului "<< dm3.getNume()<< " este "<<dm3[0]<<"." << endl;
 	dm3 += dm2;
 	cout << dm3;
+	cout << "Introduceti numarul departamentelor: ";
+	int nrr=0;
+	cin >> nrr;
+	DepartamentMedical* dm = new DepartamentMedical[nrr];
+	for (int i = 0; i < nrr; i++) {
+		cin >> dm[i];
+	}
+	for (int i = 0; i < nrr; i++) {
+		cout << dm[i];
+	}
+	int nrAngajatiDep1 = (int)dm1;
+	cout <<endl<< "Departamentul 1 are " <<nrAngajatiDep1<< " angajati";
 	
 	//clasa 3
 	EchipamentMedical em1;
@@ -691,12 +730,43 @@ void main() {
 	
 
 	cin >> em5;
-	em5--;
-	cout << em5;
-	!em5;
-	cout << em5;
+	cout << em5--;
+	cout << --em5;
+	cout << !em5;
 	cout << (em5 != em4 ? "Au durata medie de functionare diferite." : "Au aceeasi durata medie de functionare.")<<endl;
+	
+	
+	cout << "Introduceti numarul echipamentelor: ";
+	int nrrr=0;
+	cin >> nrrr;
+	EchipamentMedical* Em = new EchipamentMedical[nrrr];
+	for (int i = 0; i < nrrr; i++)
+		cin >> Em[i];
+	for (int i = 0; i < nrrr; i++)
+		cout<< Em[i]<<endl;
 
+	int nrLinii;
+	int nrColoane ;
+	cout << "Cate tipuri de echipamente doriti sa introduceti? ";
+	cin >> nrColoane;
+	cout << "Cate echipamente din fiecare tip aveti?";
+	cin >> nrLinii;
+	EchipamentMedical** emm = new EchipamentMedical* [nrLinii];
+	for (int i = 0; i < nrLinii; i++)
+	{
+		emm[i] = new EchipamentMedical[nrColoane];
+	}
+
+	for (int j = 0; j < nrColoane; j++)
+		for (int i = 0; i < nrLinii; i++) {
+			cout << "Echipamentul de tipul " << j + 1 <<  " cu numarul " << i + 1 << ":  ";
+			cin >> emm[i][j];
+		}
+	for (int i = 0; i < nrLinii; i++)
+		for (int j = 0; j < nrColoane; j++)
+			cout << emm[i][j]<<endl;
+	
 	delete[]salarii; delete[]salarii2; delete[] angajati; delete[] angajati2;
-
+	delete[]pacienti; delete[]dm; delete[] em;
+	
 }
