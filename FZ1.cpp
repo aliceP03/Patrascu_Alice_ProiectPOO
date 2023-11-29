@@ -1,6 +1,8 @@
-//Domeniu: sPitAl - Patrascu Alice (pacient, departamentMedical, echipamentMedical)
 #include <iostream>
+#include<fstream>
+
 using namespace std;
+
 class Pacient {
 private:
 	const int nrPacient;
@@ -126,7 +128,7 @@ public:
 	friend Pacient modificareAsigurare(Pacient& p); 
 
 	friend ostream &operator<<(ostream& output_p, Pacient p){
-		output_p << "Pacientul cu numarul " << p.nrPacient+1  << " se numeste " << p.nume << ", are varsta de " << p.varsta << " ani si costurile de spitalizare ";
+		output_p << "Pacientul numarul " <<p.nrPacient<<" se numeste " << p.nume << ", are varsta de " << p.varsta << " ani si costurile de spitalizare ";
 		if(p.areAsigurare)
 			output_p << "sunt acoperite de asigurarea medicala.";
 		else
@@ -155,7 +157,23 @@ public:
 			p.areAsigurare = false;
 		return input_p;
 	}
-	friend class Doctor;
+
+	friend ofstream& operator<<(ofstream& output_p, Pacient p) {
+		output_p << p.nume << endl << p.varsta <<endl<< p.areAsigurare<<endl;
+		return output_p;
+	}
+
+	friend ifstream& operator>>(ifstream& input_p, Pacient& p) {
+		char aux[40];
+		input_p >> aux;
+		if (p.nume)
+			delete[]p.nume;
+		p.nume = new char[strlen(aux) + 1];
+		strcpy_s(p.nume, strlen(aux) + 1, aux);
+		input_p >> p.varsta;
+		input_p >> p.areAsigurare;
+		return input_p;
+	}
 };
 
 int Pacient::nrGenerator = 0;
@@ -377,6 +395,50 @@ public:
 		return this->nrAngajati;
 	}
 
+
+	void citireDinFisierBinar(fstream& f) {
+		f.read((char*)&this->nrAngajati, sizeof(int));
+
+		if (this->numeAngajati)
+			delete[] this->numeAngajati;
+		if (this->salarii)
+			delete[] this->salarii;
+
+		this->numeAngajati = new string[this->nrAngajati];
+		this->salarii = new float[this->nrAngajati];
+
+		for (int i = 0; i < this->nrAngajati; i++) {
+			int lungimeNume=0;
+			f.read((char*)&lungimeNume, sizeof(int));
+
+			char* numeAngajat = new char[lungimeNume + 1];
+			f.read((char*)numeAngajat, lungimeNume);
+			numeAngajat[lungimeNume] = '\0';
+
+			this->numeAngajati[i] = string(numeAngajat);
+
+			f.read((char*)&this->salarii[i], sizeof(float) );
+
+			delete[] numeAngajat;
+		}
+
+		
+
+	}
+
+	void scriereInFisierBinar(fstream& f) {
+		f.write((char*)&this->nrAngajati, sizeof(int));
+
+		for (int i = 0; i < this->nrAngajati; i++) {
+			int lungimeNume = this->numeAngajati[i].length();
+			f.write((char*)&lungimeNume, sizeof(int));
+			f.write(this->numeAngajati[i].c_str(), lungimeNume);
+			f.write((char*)&this->salarii[i], sizeof(float));
+		}
+	}
+
+
+
 	friend void adaugareAngajat( DepartamentMedical& dm, string nume, float salariu);
 };
 
@@ -564,6 +626,31 @@ public:
 		return input_em;
 	}
 
+
+
+	void scriereInFisierBinar(fstream& f) {
+		int lungime =strlen(this->nume);
+		f.write((char*)&lungime, sizeof(int));
+		for (int i = 0; i < lungime; i++)
+			f.write((char*)&this->nume[i], sizeof(char));
+		f.write((char*)&this->durataMedieFunctionare, sizeof(int));
+		f.write((char*)&this->estePortabil, sizeof(bool));
+	}
+
+	void citireDinFisierBinar(fstream& f) {
+		int lungime=0;
+		f.read((char*)&lungime, sizeof(int));
+		if (this->nume)
+			delete[] this->nume;
+		this->nume = new char[lungime + 1];
+		for (int i = 0; i < lungime; i++)
+			f.read((char*)&this->nume[i], sizeof(char));
+		this->nume[lungime] = '\0';
+		f.read((char*)&this->durataMedieFunctionare, sizeof(int));
+		f.read((char*)&this->estePortabil, sizeof(bool));
+	}
+
+
 };
 int EchipamentMedical::nrGeneratorEchipament = 0; 
 
@@ -611,6 +698,12 @@ public:
 			this->pacienti[i] = pacienti[i];
 	}
 
+	Doctor() {
+		this->nume = "Sociu Maria";
+		this->nrPacienti = 2;
+		this->pacienti = new Pacient[2];
+	}
+
 	Doctor(const Doctor& d) {
 		this->nume = d.nume;
 		this->nrPacienti = d.nrPacienti;
@@ -655,6 +748,8 @@ public:
 		in >> d.nume;
 		cout << "Numarul actual de pacienti in grija:";
 		in >> d.nrPacienti;
+		if (d.pacienti)
+			delete[] d.pacienti;
 		d.pacienti = new Pacient[d.nrPacienti];
 		for (int i = 0; i < d.nrPacienti; i++) {
 			cout << "Datele pacientului " << i + 1 << " sunt :  ";
@@ -662,6 +757,25 @@ public:
 		}
 
 		return in;
+	}
+
+	friend ifstream& operator>> (ifstream& in, Doctor& d) {
+		in >> d.nume;
+		in >> d.nrPacienti;
+		if (d.pacienti)
+			delete[] d.pacienti;
+		d.pacienti = new Pacient[d.nrPacienti];
+		for (int i = 0; i < d.nrPacienti; i++) {
+			in >> d.pacienti[i];
+		}
+		return in;
+	}
+
+	friend ofstream& operator<< (ofstream& out, const Doctor& d) {
+		out << d.nume << endl << d.nrPacienti << endl;
+		for (int i = 0; i < d.nrPacienti; i++)
+			out << d.pacienti[i] << endl;
+		return out;
 	}
 	
 };
@@ -706,12 +820,27 @@ void main() {
 	pacient5.AfisarePacient();
 
 	//clasa doctor(4)
+	Doctor dr1;
 	Pacient* p = new Pacient[2]{ pacient1, pacient2 };
-	Doctor dr1("Florescu", 2, p);
-	cout << dr1;
+	Doctor dr5("Florescu", 2, p);
+	cout << dr5;
 	Doctor dr2 = dr1;
 	cin >> dr2;
 	cout << dr2;
+	cout << (dr1 > dr2 ? "Primul doctor are mai multi pacienti." : "Al doilea doctor are mai multi pacienti.");
+
+	Doctor dr3, dr4;
+	cin >> dr3;
+	ofstream afisareD("Doctori.txt", ios::out);
+	afisareD << dr3;
+	afisareD.close();
+	cout << dr3;
+	ifstream citireD("Doctori.txt", ios::in);
+	citireD >> dr4;
+	cout << dr4;
+	citireD.close();
+
+
 
 	//clasa pacient(1)
 	Pacient pacient6;
@@ -735,6 +864,16 @@ void main() {
 	}
 	for (int i = 0; i < Nr; i++)
 		cout << pacienti[i];
+	Pacient pacient8, pacient9;
+	cin >> pacient8;
+	ofstream afisareP("Pacienti.txt", ios::out);
+	afisareP << pacient8;
+	afisareP.close();
+	cout << pacient8;
+	ifstream citireP("Pacienti.txt", ios::in);
+	citireP >> pacient9;
+	cout << pacient9;
+	citireP.close();
 
 
 
@@ -807,6 +946,17 @@ void main() {
 	}
 	int nrAngajatiDep1 = (int)dm1;
 	cout << endl << "Departamentul 1 are " << nrAngajatiDep1 << " angajati";
+	DepartamentMedical dm6, dm7;
+	cin >> dm6;
+	fstream fisierDM("Departamente.txt", ios::out | ios::binary);
+	dm6.scriereInFisierBinar(fisierDM);
+	fisierDM.close();
+
+	fstream fisierDMcitire("Departamente.txt", ios::in | ios::binary);
+	dm7.citireDinFisierBinar(fisierDMcitire);
+	fisierDMcitire.close();
+	cout << dm7;
+
 
 	//clasa echipament medical (3)
 	EchipamentMedical em1;
@@ -878,7 +1028,17 @@ void main() {
 		for (int j = 0; j < nrColoane; j++)
 			cout << echipamente[i][j] << endl;
 
+	EchipamentMedical em6;
+	EchipamentMedical em7;
+	cin >> em6;
+	fstream fisierBinarScriere("Echipamente.dat", ios::out | ios::binary);
+	em6.scriereInFisierBinar(fisierBinarScriere);
+	fisierBinarScriere.close();
 
+	fstream fisierBinarCitire("Echipamente.dat", ios::in | ios::binary);
+	em7.citireDinFisierBinar(fisierBinarCitire);
+	fisierBinarCitire.close();
+	cout << em7;
 
 	delete[]salarii; delete[]salarii2; delete[] angajati; delete[] angajati2;
 	delete[]pacienti; delete[]dm; delete[] em; delete[]p;
