@@ -1,3 +1,4 @@
+//Domeniu: sPitAl - Patrascu Alice (pacient, departamentMedical, echipamentMedical)
 #include <iostream>
 #include<fstream>
 
@@ -194,7 +195,7 @@ class DepartamentMedical {
 	float* salarii;
 
 public:
-	DepartamentMedical(): nume("Cardiologie") {
+	DepartamentMedical(): nume("Chirurgie") {
 		nrAngajati = 3;
 		numeAngajati=new string[nrAngajati];
 		numeAngajati[0] = "Ionescu";
@@ -331,6 +332,8 @@ public:
 			return numeAngajati[index];
  	}
 
+
+
 	DepartamentMedical operator+=(const DepartamentMedical& dm) {
 		int aux = this->nrAngajati + dm.nrAngajati;
 		string* aux1 = new string[aux];
@@ -441,6 +444,8 @@ public:
 
 	friend void adaugareAngajat( DepartamentMedical& dm, string nume, float salariu);
 };
+
+
 
 float DepartamentMedical::salariuMinim = 3000;
 
@@ -780,9 +785,252 @@ public:
 	
 };
 
+class Chirurgie : public DepartamentMedical {
+	string tip;
+	int nrDoctori;
+	Doctor* drChirurgi;
+
+public:
+
+
+	Chirurgie(string tip, int nrAng, string* numeAng, float* salarii) : DepartamentMedical("Chirurgie", nrAng, numeAng, salarii) {
+		this->tip = tip;
+		this->nrDoctori = 2;
+		this->drChirurgi = new Doctor[2];
+	}
+
+	Chirurgie() :DepartamentMedical() {
+		this->tip = "Plastica";
+		this->nrDoctori = 1;
+		this->drChirurgi = new Doctor[1];
+	}
+
+	string getTip() {
+		return this->tip;
+	}
+
+	int getNrDr() {
+		return this->nrDoctori;
+	}
+
+	Doctor getDocotor(int index) {
+		if (index < this->nrDoctori && index>0)
+			return this->drChirurgi[index];
+	}
+
+	void setTip(string tip) {
+		this->tip = tip;
+	}
+
+	void setDr(int nrDr, Doctor* dr) {
+		if (nrDr > 0) {
+			this->nrDoctori = nrDr;
+			if (this->drChirurgi)
+				delete[] drChirurgi;
+			this->drChirurgi = new Doctor[nrDr];
+			this->drChirurgi = dr;
+		}
+	}
+
+	Chirurgie(const Chirurgie& c) : DepartamentMedical(c) {
+		this->tip = c.tip;
+		this->nrDoctori = c.nrDoctori;
+		this->drChirurgi = new Doctor[this->nrDoctori];
+		for (int i = 0; i < this->nrDoctori; i++)
+			this->drChirurgi[i] = c.drChirurgi[i];
+	}
+
+	Chirurgie operator=(const Chirurgie& c) {
+		if (this != &c) {
+			DepartamentMedical :: operator=(c);
+			this->tip = c.tip;
+			this->nrDoctori = c.nrDoctori;
+			if (this->drChirurgi)
+				delete[] this->drChirurgi;
+			this->drChirurgi = new Doctor[this->nrDoctori];
+			for (int i = 0; i < this->nrDoctori; i++)
+				this->drChirurgi[i] = c.drChirurgi[i];
+		}
+		return *this;
+	}
+
+	~Chirurgie() {
+		if (this->drChirurgi)
+			delete[] this->drChirurgi;
+	}
+
+
+
+	friend istream& operator>>(istream& in_c, Chirurgie& c) {
+		in_c >> (DepartamentMedical&)c;
+		cout << "Tipul chirurgiei: ";
+		in_c >> c.tip;
+		cout << "Numarul de doctori: ";
+		in_c >> c.nrDoctori;
+		if (c.drChirurgi)
+			delete[] c.drChirurgi;
+		c.drChirurgi = new Doctor[c.nrDoctori];
+		for (int i = 0; i < c.nrDoctori; i++)
+			in_c >> c.drChirurgi[i];
+		return in_c;
+	}
+
+	friend ostream& operator<<(ostream& out_c, const  Chirurgie& c) {
+		out_c << (DepartamentMedical)c << endl;
+		out_c << "Departamentul de chirurgie " << c.tip << " are un colectiv de " << c.nrDoctori << " doctori: \n";
+		for (int i = 0; i < c.nrDoctori; i++)
+			out_c << c.drChirurgi[i] << endl;
+		return out_c;
+	}
+
+	void adaugaDoctor(Doctor dr) {
+		Doctor* aux = new Doctor[this->nrDoctori + 1];
+		for (int i = 0; i < this->nrDoctori; i++)
+			aux[i] = this->drChirurgi[i];
+		aux[this->nrDoctori] = dr;
+		this->nrDoctori++;
+		if (this->drChirurgi)
+			delete[]this->drChirurgi;
+		this->drChirurgi = aux;
+	}
+};
+
+class PacientPeListaAsteptare : public Pacient {
+private:
+	char* organAsteptat;
+	int grupaSange;
+	bool rh;
+
+public:
+
+	char* getOrganAsteptat() {
+		return this->organAsteptat;
+	}
+
+	char* setOrganAsteptat(const char* organ) {
+		if (this->organAsteptat)
+			delete[]this->organAsteptat;
+		this->organAsteptat = new char[strlen(organ) + 1];
+		strcpy_s(this->organAsteptat, strlen(organ) + 1, organ);
+	}
+
+	
+	int getGrupa() {
+		return this->grupaSange;
+	}
+
+	void setGrupa(int gr) {
+		if (gr == 1 || gr == 2 || gr == 3 || gr == 4) {
+			this->grupaSange = gr;
+		}
+	}
+
+	bool getRh() {
+		return this->rh;
+	}
+
+	void setRh(bool Rh) {
+		this->rh = Rh;
+	}
+
+
+	PacientPeListaAsteptare() :Pacient() {
+		this->organAsteptat = new char[strlen("rinichi") + 1];
+		strcpy_s(this->organAsteptat, strlen("rinichi") + 1, "rinichi");
+		this->grupaSange = 1;
+		this->rh = true;
+	}
+
+	PacientPeListaAsteptare(int varsta, bool asigurare, int grupaSange, bool rh) :Pacient(varsta, asigurare){
+		this->organAsteptat = new char[strlen("rinichi") + 1];
+		strcpy_s(this->organAsteptat, strlen("rinichi") + 1, "rinichi");
+		this->grupaSange = grupaSange;
+		this->rh = rh;
+	}	
+
+	PacientPeListaAsteptare(const PacientPeListaAsteptare& p) :Pacient(p){
+		this->organAsteptat = new char[strlen(p.organAsteptat) + 1];
+		strcpy_s(this->organAsteptat, strlen(p.organAsteptat) + 1, p.organAsteptat);
+		this->grupaSange = p.grupaSange;
+		this->rh = p.rh;
+	}
+
+	PacientPeListaAsteptare operator=(const PacientPeListaAsteptare& p) {
+		if (this != &p) {
+			Pacient :: operator=(p);
+			if (this->organAsteptat)
+				delete[]this->organAsteptat;
+			this->organAsteptat = new char[strlen(p.organAsteptat) + 1];
+			strcpy_s(this->organAsteptat, strlen(p.organAsteptat) + 1, p.organAsteptat);
+			this->grupaSange = p.grupaSange;
+			this->rh = p.rh;
+		}
+		return *this;
+	}
+
+	~PacientPeListaAsteptare() {
+		if (this->organAsteptat)
+			delete[]this->organAsteptat;
+	}
+
+	friend ostream& operator<<(ostream& out, const PacientPeListaAsteptare& p) {
+		out << (Pacient)p;
+		out << "Pacientul este pe lista de asteptare pentru " << p.organAsteptat << ".\n";
+		switch (p.grupaSange) {
+		case 1:
+			out << "Grupa de sange: 0" << endl;
+			break;
+		case 2:
+			out << "Grupa de sange: A" << endl;
+			break;
+		case 3:
+			out << "Grupa de sange: B" << endl;
+			break;
+		case 4:
+			out << "Grupa de sange: AB" << endl;
+			break;
+		default:
+			out << "Numarul introdus nu corespunde unei grupe de sange valide." << endl;
+			break;
+		}
+		out << (p.rh ? "Rh pozitiv." : "Rh negativ.")<<endl;
+		return out;
+	}
+
+	friend istream& operator>> (istream& in, PacientPeListaAsteptare& p) {
+		in >> (Pacient&)p;
+		cout << "Introduceti datele. Pacientul este pe lista de asteptare pentru: ";
+		char aux[30];
+		in >> aux;
+		if (p.organAsteptat)
+			delete[]p.organAsteptat;
+		p.organAsteptat = new char[strlen(aux) + 1];
+		strcpy_s(p.organAsteptat, strlen(aux) + 1, aux);
+		cout << "Grupa de sange: \n (1,2,3 sau 4):";
+		in >> p.grupaSange;
+		char var = 0;
+		cout << "RH:\n+->pozitiv\n- ->negativ: ";
+		in >> var;
+		if (var == '+')
+			p.rh = true;
+		else
+			p.rh = false;
+		return in;
+
+	}
+
+	bool operator==(PacientPeListaAsteptare &p) {
+		return this->grupaSange == p.grupaSange && this->rh==p.grupaSange;
+	}
+
+
+};
+
 
 
 void main() {
+	
+	
 	//clasa pacient(1)
 	Pacient pacient1;
 	pacient1.AfisarePacient();
@@ -1040,7 +1288,26 @@ void main() {
 	fisierBinarCitire.close();
 	cout << em7;
 
+
+	//clasas 5 (Chirurgie) ce mosteneste clasa Departament Medical
+	Chirurgie ch1;
+	cin >> ch1;
+	cout << ch1;
+	Chirurgie ch2;
+	Doctor DR1;
+	ch2.adaugaDoctor(DR1);
+	cout << ch2;
+
+
+	//Clasa 6(Pacient Aflat pe Lista de Asteptare) ce mosteneste clasa Pacient 
+	PacientPeListaAsteptare pacientA1;
+	cin >> pacientA1;
+	cout << pacientA1;
+	PacientPeListaAsteptare pacientA2;
+	cout << (pacientA1 == pacientA2 ? "Pacientii sunt perfect compatibili." : "Pacientii nu sunt perfect compatibili.") << endl;
+
+
 	delete[]salarii; delete[]salarii2; delete[] angajati; delete[] angajati2;
 	delete[]pacienti; delete[]dm; delete[] em; delete[]p;
-
+	
 }
