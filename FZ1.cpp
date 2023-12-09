@@ -1,10 +1,57 @@
-//Domeniu: sPitAl - Patrascu Alice (pacient, departamentMedical, echipamentMedical)
 #include <iostream>
 #include<fstream>
 
 using namespace std;
 
-class Pacient {
+class Cetatean {
+	const string CNP;
+	char gen;
+public:
+	Cetatean(string CNP, char gen): CNP(CNP), gen(gen) {}
+
+	Cetatean() : CNP("6030485903494") {
+		gen = 'F';
+	}
+
+	Cetatean(const Cetatean& c) : CNP(c.CNP) {
+		this->gen = c.gen;
+	}
+
+
+
+	string getCNP() {
+		return this->CNP;
+	}
+
+	char getGen() {
+		return this->gen;
+	}
+
+	void setGen(char gen) {
+		if (gen == 'F' || gen == 'M')
+			this->gen = gen;
+	}
+
+	virtual void detaliiCetatean() = 0;
+
+};
+
+class EntitateMedicala {
+	string nume;
+public:
+	EntitateMedicala(string nume) {
+		this->nume = nume;
+	}
+
+	EntitateMedicala(const EntitateMedicala& em) {
+		this->nume = em.nume;
+	}
+
+	virtual void detaliiMedicale() = 0;
+};
+
+
+class Pacient : public Cetatean{
 private:
 	const int nrPacient;
 	static int nrGenerator;
@@ -13,28 +60,34 @@ private:
 	bool areAsigurare;
 public:
 
-	Pacient(): nrPacient(nrGenerator++) {
+	void detaliiCetatean() {
+		cout << "Cetateanul cu CNP "<<getCNP()<< " este pacient la spitalul curent."<<endl;
+	}
+
+	Pacient(): nrPacient(nrGenerator++), Cetatean(){
+
 		this->nume = new char[strlen("Popescu Ion") + 1]; //alocare memorie
 		strcpy_s(this->nume, strlen("Popescu Ion") + 1, "Popescu Ion"); 
 		this->varsta = 40;
 		this->areAsigurare = true;
 	}
-	Pacient(char* nume, int varsta, bool areAsigurare):nrPacient(nrGenerator)
-	{
+	Pacient(char* nume, int varsta, bool areAsigurare, string CNP, char gen):nrPacient(nrGenerator), Cetatean(CNP, gen){
 		nrGenerator++;
 		this->nume = nume;
 		this->varsta = varsta;
 		this->areAsigurare = areAsigurare;
 	}
 
-	Pacient(int varsta, bool areAsigurare) :nrPacient(nrGenerator++) {
+	Pacient(int varsta, bool areAsigurare, string CNP, char gen) :nrPacient(nrGenerator++) , Cetatean(CNP, gen)
+	{
 		this->nume = new char[strlen("Popa Ion") + 1];
 		strcpy_s(this->nume, strlen("Popa Ion") + 1, "Popa Ion");
 		this->varsta = varsta;
 		this->areAsigurare = areAsigurare;
 	}
 
-	Pacient(const Pacient &p):nrPacient(nrGenerator++) {
+	Pacient(const Pacient &p):nrPacient(nrGenerator++), Cetatean(p)
+	{
 		this->nume = new char[strlen(p.nume)+1];
 		strcpy_s(this->nume, strlen(p.nume)+1, p.nume);
 		this->varsta = p.varsta;
@@ -187,7 +240,7 @@ int Pacient::nrGenerator = 0;
 	return p;
 }
 
-class DepartamentMedical {
+class DepartamentMedical:public EntitateMedicala {
 	const string nume;
 	static float salariuMinim;
 	int nrAngajati;
@@ -195,7 +248,11 @@ class DepartamentMedical {
 	float* salarii;
 
 public:
-	DepartamentMedical(): nume("Chirurgie") {
+	void detaliiMedicale() {
+		cout << "Departamentul medical " << getNume() << " are " << getNrAngajati() << " (de) angajati. "<<endl;
+	}
+
+	DepartamentMedical(): nume("Chirurgie"), EntitateMedicala("Departament Medical") {
 		nrAngajati = 3;
 		numeAngajati=new string[nrAngajati];
 		numeAngajati[0] = "Ionescu";
@@ -207,7 +264,7 @@ public:
 		salarii[2] = salariuMinim;
 	}
 
-	DepartamentMedical(string nume, int nrAngajati, string* numeAngajati, float* salarii):nume(nume) {
+	DepartamentMedical(string nume, int nrAngajati, string* numeAngajati, float* salarii):nume(nume), EntitateMedicala("Departament Medical") {
 		this->nrAngajati = nrAngajati;
 		this->numeAngajati = new string[nrAngajati];
 		for (int j = 0; j < nrAngajati; j++) {
@@ -219,7 +276,7 @@ public:
 		}
 	}
 
-	DepartamentMedical(int nrAngajati, string* numeAngajati, float* salarii) : nume("Chirurgie") {
+	DepartamentMedical(int nrAngajati, string* numeAngajati, float* salarii) : nume("Chirurgie"),  EntitateMedicala("Departament Medical") {
 		this->nrAngajati = nrAngajati;
 		this->numeAngajati = new string[nrAngajati];
 		for (int i = 0; i < nrAngajati; i++) {
@@ -231,7 +288,7 @@ public:
 		}
 	}
 
-	DepartamentMedical(const DepartamentMedical &dm): nume(dm.nume){
+	DepartamentMedical(const DepartamentMedical &dm): nume(dm.nume), EntitateMedicala(dm) {
 		this->nrAngajati = dm.nrAngajati;
 		this->numeAngajati = new string[nrAngajati];
 		for (int i = 0; i < nrAngajati; i++) {
@@ -471,7 +528,7 @@ void adaugareAngajat( DepartamentMedical& dm, string nume, float salariu) {
 
 }
 
-class EchipamentMedical {
+class EchipamentMedical: public EntitateMedicala {
 
 	static int nrGeneratorEchipament;
 	const int nrEchipament;
@@ -481,7 +538,11 @@ class EchipamentMedical {
 
 public:
 	
-	EchipamentMedical():nrEchipament(nrGeneratorEchipament) {
+	void detaliiMedicale() {
+		cout << "Echipamentul medical " << getNume() << " are o durata medie de functionare de " << getDurataMedieFunctionare() << " (de) ani.\n";
+	}
+
+	EchipamentMedical():nrEchipament(nrGeneratorEchipament), EntitateMedicala("Echipament Medical") {
 		nrGeneratorEchipament++;
 		this->nume = new char[strlen("Defibrilator") + 1];
 		strcpy_s(nume, strlen("Defibrilator") + 1, "Defibrilator");
@@ -489,20 +550,20 @@ public:
 		estePortabil = true;
 	}
 
-	EchipamentMedical(char* nume, int durataMedieFunctionare, bool estePortabil) : nrEchipament(nrGeneratorEchipament++) {
+	EchipamentMedical(char* nume, int durataMedieFunctionare, bool estePortabil) : nrEchipament(nrGeneratorEchipament++) , EntitateMedicala("Echipament Medical") {
 		this->nume = nume;
 		this->durataMedieFunctionare = durataMedieFunctionare;
 		this->estePortabil = estePortabil;
 	}
 
 	EchipamentMedical(int durataMedieFunctionare, bool estePortabil) : nrEchipament(nrGeneratorEchipament++),
-		durataMedieFunctionare(durataMedieFunctionare), estePortabil(estePortabil) {
+		durataMedieFunctionare(durataMedieFunctionare), estePortabil(estePortabil), EntitateMedicala("Echipament Medical") {
 		this->nume = new char[strlen("Stetoscop") + 1];
 		strcpy_s(nume, strlen("Stetoscop") + 1, "Stetoscop");
 
 	}
 
-	EchipamentMedical(const EchipamentMedical& ec) : nrEchipament(nrGeneratorEchipament++) {
+	EchipamentMedical(const EchipamentMedical& ec) : nrEchipament(nrGeneratorEchipament++), EntitateMedicala(ec) {
 		this->nume = new char[strlen(ec.nume)+1];
 		strcpy_s(this->nume, strlen(ec.nume)+1, ec.nume);
 		this->durataMedieFunctionare = ec.durataMedieFunctionare;
@@ -659,12 +720,16 @@ public:
 };
 int EchipamentMedical::nrGeneratorEchipament = 0; 
 
-class Doctor {
+class Doctor: public Cetatean {
 	string nume;
 	int nrPacienti;
 	Pacient* pacienti;
 
 public:
+
+	void detaliiCetatean() {
+		cout << "Cetateanul cu CNP: "<<getCNP()<< " este doctor.";
+	}
 
 	string getNume() {
 		return this->nume;
@@ -695,7 +760,7 @@ public:
 		}
 	}
 
-	Doctor(string nume, int nrPacienti, Pacient *pacienti) {
+	Doctor(string nume, int nrPacienti, Pacient *pacienti, string CNP, char gen): Cetatean(CNP, gen) {
 		this->nume = nume;
 		this->nrPacienti = nrPacienti;
 		this->pacienti = new Pacient[this->nrPacienti];
@@ -703,13 +768,13 @@ public:
 			this->pacienti[i] = pacienti[i];
 	}
 
-	Doctor() {
+	Doctor() : Cetatean(){
 		this->nume = "Sociu Maria";
 		this->nrPacienti = 2;
 		this->pacienti = new Pacient[2];
 	}
 
-	Doctor(const Doctor& d) {
+	Doctor(const Doctor& d): Cetatean(d) {
 		this->nume = d.nume;
 		this->nrPacienti = d.nrPacienti;
 		this->pacienti = new Pacient[nrPacienti];
@@ -736,7 +801,7 @@ public:
 			delete[] pacienti;
 	}
 
-	bool operator>(Doctor d) {
+	bool operator>(Doctor d) {	
 		return this->nrPacienti > d.nrPacienti;
 	}
 
@@ -941,7 +1006,7 @@ public:
 		this->rh = true;
 	}
 
-	PacientPeListaAsteptare(int varsta, bool asigurare, int grupaSange, bool rh) :Pacient(varsta, asigurare){
+	PacientPeListaAsteptare(int varsta, bool asigurare, int grupaSange, bool rh, char gen, string CNP) :Pacient(varsta, asigurare, CNP, gen){
 		this->organAsteptat = new char[strlen("rinichi") + 1];
 		strcpy_s(this->organAsteptat, strlen("rinichi") + 1, "rinichi");
 		this->grupaSange = grupaSange;
@@ -1026,10 +1091,34 @@ public:
 
 };
 
+class Spital {
+	int nrEntitati;
+	EntitateMedicala** entitati;
 
+public:
+	Spital() {
+		this->nrEntitati = 10;
+		this->entitati = new EntitateMedicala * [10];
+		for (int i = 0; i < 10; i++)
+			this->entitati[i] = new EchipamentMedical[i];
+	}
+
+	EntitateMedicala*& operator[](int index){
+		if (index >= 0 && index < this->nrEntitati)
+			return this->entitati[index];
+	}
+
+	~Spital() {
+		if (entitati)
+			delete[]entitati;
+
+	}
+};
+ 
 
 void main() {
 	
+
 	
 	//clasa pacient(1)
 	Pacient pacient1;
@@ -1037,17 +1126,16 @@ void main() {
 
 	char* nume = new char[strlen("Ionescu Ion") + 1];
 	strcpy_s(nume, strlen("Ionescu Ion") + 1, "Ionescu Ion");
-	Pacient pacient2(nume, 25, false);
+	Pacient pacient2(nume, 25, false, "5678905321543", 'M');
 	pacient2.AfisarePacient();
 	modificareAsigurare(pacient2);
 	pacient2.AfisarePacient(); //apelare functie prietena cu clasa pacient 
 
-
-	Pacient pacient3(50, true);
+	
+	Pacient pacient3(50, true, "1098467392385", 'M');
 	pacient3.AfisarePacient();
 
 	cout << "Numarul de pacienti consultati pana in acest moment este de " << Pacient::getNrGenerator() << "." << endl;
-
 
 
 	Pacient pacient4(pacient2);//copiere prin constructorul de copiere 
@@ -1067,30 +1155,7 @@ void main() {
 	pacient5 = pacient2;//copiere prin operatorul =
 	pacient5.AfisarePacient();
 
-	//clasa doctor(4)
-	Doctor dr1;
-	Pacient* p = new Pacient[2]{ pacient1, pacient2 };
-	Doctor dr5("Florescu", 2, p);
-	cout << dr5;
-	Doctor dr2 = dr1;
-	cin >> dr2;
-	cout << dr2;
-	cout << (dr1 > dr2 ? "Primul doctor are mai multi pacienti." : "Al doilea doctor are mai multi pacienti.");
 
-	Doctor dr3, dr4;
-	cin >> dr3;
-	ofstream afisareD("Doctori.txt", ios::out);
-	afisareD << dr3;
-	afisareD.close();
-	cout << dr3;
-	ifstream citireD("Doctori.txt", ios::in);
-	citireD >> dr4;
-	cout << dr4;
-	citireD.close();
-
-
-
-	//clasa pacient(1)
 	Pacient pacient6;
 	cin >> pacient6;
 	cout << pacient6;
@@ -1112,6 +1177,7 @@ void main() {
 	}
 	for (int i = 0; i < Nr; i++)
 		cout << pacienti[i];
+
 	Pacient pacient8, pacient9;
 	cin >> pacient8;
 	ofstream afisareP("Pacienti.txt", ios::out);
@@ -1121,9 +1187,29 @@ void main() {
 	ifstream citireP("Pacienti.txt", ios::in);
 	citireP >> pacient9;
 	cout << pacient9;
-	citireP.close();
+	citireP.close(); 
 
+	//clasa doctor(4)
+	Doctor dr1;
+	Pacient* p = new Pacient[2]{ pacient1, pacient2 };
+	Doctor dr5("Florescu", 2, p,"2057483957928", 'M');
+	cout << dr5;
+	Doctor dr2 = dr1;
+	cin >> dr2;
+	cout << dr2;
+	cout << (dr1 > dr2 ? "Primul doctor are mai multi pacienti." : "Al doilea doctor are mai multi pacienti.");
 
+	Doctor dr3, dr4;
+	cin >> dr3;
+	ofstream afisareD("Doctori.txt", ios::out);
+	afisareD << dr3;
+	afisareD.close();
+	cout << dr3;
+	ifstream citireD("Doctori.txt", ios::in);
+	citireD >> dr4;
+	cout << dr4;
+	citireD.close();
+	cout << (dr5 > dr4 ? dr3.getNume() : dr4.getNume())<<endl; 
 
 	//clasa departament medical(2)
 	DepartamentMedical dm1;
@@ -1160,7 +1246,7 @@ void main() {
 		cout << "       " << i + 1 << ". " << dm4.getNumeAngajati(i) << " are salariul de " << dm4.getSalarii(i) << " lei." << endl;
 	}
 	cout << endl;
-	dm5 = dm1;
+	dm5 = dm1; 
 	dm5.afisare();
 	string* vec1 = new string[4]{ "Stoica", "Marinescu","Pop", "Popovici" };
 	float* vec2 = new float[4] {3978, 4587, 6700, 4567};
@@ -1178,18 +1264,18 @@ void main() {
 	cout << "Bugetul pentru salarii in sectia de " << dm3.getNume() << " este de " << dm3() << " lei." << endl;
 	cout << dm3;
 	cin >> dm3;
-	dm3[0] = "Amariei";
+	dm3[0] = "Andrei";
 	cout << "Noul angajat al departamentului " << dm3.getNume() << " este " << dm3[0] << "." << endl;
 	dm3 += dm2;
 	cout << dm3;
 	cout << "Introduceti numarul departamentelor: ";
-	int NR = 0;
-	cin >> NR;
-	DepartamentMedical* dm = new DepartamentMedical[NR];
-	for (int i = 0; i < NR; i++) {
+	int nr_departamente = 0;
+	cin >> nr_departamente;
+	DepartamentMedical* dm = new DepartamentMedical[nr_departamente];
+	for (int i = 0; i < nr_departamente; i++) {
 		cin >> dm[i];
 	}
-	for (int i = 0; i < NR; i++) {
+	for (int i = 0; i < nr_departamente; i++) {
 		cout << dm[i];
 	}
 	int nrAngajatiDep1 = (int)dm1;
@@ -1203,7 +1289,7 @@ void main() {
 	fstream fisierDMcitire("Departamente.txt", ios::in | ios::binary);
 	dm7.citireDinFisierBinar(fisierDMcitire);
 	fisierDMcitire.close();
-	cout << dm7;
+	cout << dm7; 
 
 
 	//clasa echipament medical (3)
@@ -1238,7 +1324,7 @@ void main() {
 	cout << endl;
 	cout << "Numarul total de echipamente existente in spital este de " << EchipamentMedical::getNumarTotal() << "." << endl;
 
-
+	
 	cin >> em5;
 	cout << em5--;
 	cout << --em5;
@@ -1286,7 +1372,7 @@ void main() {
 	fstream fisierBinarCitire("Echipamente.dat", ios::in | ios::binary);
 	em7.citireDinFisierBinar(fisierBinarCitire);
 	fisierBinarCitire.close();
-	cout << em7;
+	cout << em7; 
 
 
 	//clasas 5 (Chirurgie) ce mosteneste clasa Departament Medical
@@ -1294,8 +1380,8 @@ void main() {
 	cin >> ch1;
 	cout << ch1;
 	Chirurgie ch2;
-	Doctor DR1;
-	ch2.adaugaDoctor(DR1);
+	Doctor dr6;
+	ch2.adaugaDoctor(dr6);
 	cout << ch2;
 
 
@@ -1305,8 +1391,26 @@ void main() {
 	cout << pacientA1;
 	PacientPeListaAsteptare pacientA2;
 	cout << (pacientA1 == pacientA2 ? "Pacientii sunt perfect compatibili." : "Pacientii nu sunt perfect compatibili.") << endl;
+	
 
+	//clasa 7 (Spital)
+	char* em_spital = new char[strlen("Aparat de Radiografie") + 1];
+	strcpy_s(em_spital, strlen("Aparat de Radiografie") + 1, "Aparat de Radiografie");
+	Spital s1;
+	s1[0] = new EchipamentMedical();
+	s1[1] = new EchipamentMedical(10, true);
+	s1[4] = new EchipamentMedical(em_spital, 10, true);
+	s1[2] = new EchipamentMedical(23, false);
+	s1[3] = new EchipamentMedical(em2);
+	s1[5] = new DepartamentMedical(dm1);
+	s1[6] = new DepartamentMedical(dm2);
+	s1[7] = new DepartamentMedical(dm3);
+	s1[8] = new DepartamentMedical(dm5);
+	s1[9] = new DepartamentMedical(dm4);
 
+	for (int i = 0; i < 10; i++)
+		s1[i]->detaliiMedicale();
+	
 	delete[]salarii; delete[]salarii2; delete[] angajati; delete[] angajati2;
 	delete[]pacienti; delete[]dm; delete[] em; delete[]p;
 	
